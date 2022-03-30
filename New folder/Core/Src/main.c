@@ -49,6 +49,7 @@ uint16_t ADCOutputConverted = 0;
 uint16_t ADCmode = 0;
 uint16_t ADCDataRaw = 0;
 uint16_t ADCTempData = 0;
+int count=0;
 
 /* USER CODE END PV */
 
@@ -111,11 +112,24 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  // Function Call ADC
-	  ADCPollingMethodUpdate();
-	  ADCTempingMethodUpdate();
+//	  ADCPollingMethodUpdate();
+//	  ADCTempingMethodUpdate();
 
-	  // Function select for Temp / PA0
-	  ADCmode = HAL_GPIO_TogglePin(GPIOx, GPIO_Pin);
+	  // Function select for Temp / PA0 with Pin PC13
+	  static GPIO_PinState B1state[2] = {0}; // create value to collect it(GPIO_PinState) // ADCmode[2] = remember the state first round and don't toggle it again
+	  B1state[0] = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13); // real state
+	  if(B1state[1] == GPIO_PIN_SET && B1state[0] == GPIO_PIN_RESET )//state before are high and next state are low = the button have pushed already(falling-edge detected)
+	  {
+		  if (count%2 == 0){
+			  ADCmode = 1;			// count with odd number
+		  }
+		  else if (count%2 == 1){
+			  ADCmode = 0;			// count with even number
+		  }
+		  count++;
+	  }
+	  B1state[1] = B1state[0];
+
 
 	  if (ADCmode == 0){
 		  ADCPollingMethodUpdate();
@@ -308,7 +322,7 @@ void ADCTempingMethodUpdate(){
 
 	//Read data
 	ADCTempData = HAL_ADC_GetValue(&hadc1);
-	// ADCOutputConverted = HAL_ADC_GetValue(&hadc1); open after toggle switch finish
+	ADCOutputConverted = HAL_ADC_GetValue(&hadc1); // open after toggle switch finish
 
 	//stop ADC
 	HAL_ADC_Stop(&hadc1);
@@ -331,7 +345,7 @@ void ADCPollingMethodUpdate(){
 
 	//Read data
 	ADCDataRaw = HAL_ADC_GetValue(&hadc1);
-	// ADCOutputConverted = HAL_ADC_GetValue(&hadc1); open after toggle switch finish
+	ADCOutputConverted = HAL_ADC_GetValue(&hadc1); // open after toggle switch finish
 
 	//stop ADC
 	HAL_ADC_Stop(&hadc1);
