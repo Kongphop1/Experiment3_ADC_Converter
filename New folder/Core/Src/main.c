@@ -45,11 +45,12 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-uint16_t ADCOutputConverted = 0;
+float ADCOutputConverted = 0.0;
 uint16_t ADCmode = 0;
 uint16_t ADCDataRaw = 0;
 uint16_t ADCTempData = 0;
 int count=0;
+float ADCtoVolatage = 0.0;
 
 /* USER CODE END PV */
 
@@ -60,7 +61,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
-void ADCPollingMethodUpdate();
+void ADCVoltage();
 void ADCTempingMethodUpdate();
 
 /* USER CODE END PFP */
@@ -132,7 +133,7 @@ int main(void)
 
 
 	  if (ADCmode == 0){
-		  ADCPollingMethodUpdate();
+		  ADCVoltage();
 	  }
 	  else if (ADCmode == 1){
 		  ADCTempingMethodUpdate();
@@ -328,12 +329,13 @@ void ADCTempingMethodUpdate(){
 	HAL_ADC_Stop(&hadc1);
 }
 
-void ADCPollingMethodUpdate(){
+void ADCVoltage(){
 
 	static ADC_ChannelConfTypeDef useforADC;
 	useforADC.Channel = ADC_CHANNEL_0;
 	useforADC.Rank = 1;
 	useforADC.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+
 	//setting channel of ADC
 	HAL_ADC_ConfigChannel(&hadc1, &useforADC);
 
@@ -345,10 +347,13 @@ void ADCPollingMethodUpdate(){
 
 	//Read data
 	ADCDataRaw = HAL_ADC_GetValue(&hadc1);
-	ADCOutputConverted = HAL_ADC_GetValue(&hadc1); // open after toggle switch finish
+	ADCtoVolatage = HAL_ADC_GetValue(&hadc1); // open after toggle switch finish
 
 	//stop ADC
 	HAL_ADC_Stop(&hadc1);
+
+	ADCOutputConverted = ((ADCtoVolatage)/4095 * 3.3)*10*10*10 ;
+
 }
 
 
